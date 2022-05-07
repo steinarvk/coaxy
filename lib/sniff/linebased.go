@@ -65,6 +65,7 @@ func makeCSVishParser(formatType FormatType, separator rune) func(r io.Reader) (
 
 		desc := &Descriptor{
 			Format:     formatType,
+			TupleBased: true,
 			HasHeader:  hasHeader,
 			NumColumns: commonLength,
 			FieldTypes: map[string]ValueType{},

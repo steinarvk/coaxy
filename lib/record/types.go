@@ -1,19 +1,20 @@
 package record
 
 import (
-	"io"
-
 	"github.com/steinarvk/chaxy/lib/sniff"
 )
 
 type Stream struct {
-	descriptor       *sniff.Descriptor
-	reader           io.Reader
-	shouldSkipHeader bool
+	descriptor  *sniff.Descriptor
+	tupleReader *tupleReader
+	selected    bool
 }
 
 type Accessor struct {
+	byIndex bool
+	index   int
 }
 
-type Record struct {
+type Reader struct {
+	read func([]string) error
 }

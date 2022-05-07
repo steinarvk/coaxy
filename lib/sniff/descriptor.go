@@ -38,6 +38,7 @@ func (t ValueType) String() string {
 
 type Descriptor struct {
 	Format      FormatType
+	TupleBased  bool
 	HasHeader   bool
 	NumColumns  int
 	ColumnNames []string
