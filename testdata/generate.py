@@ -4,9 +4,12 @@ import json
 def generate_sequence(n=1000):
     random.seed(1234)
     for _ in range(n):
+        x = random.random()
+        y = int(1000 * (x + 0.1 * (random.random()*2-1)))
+        y *= y
         yield {
-            "real": random.random(),
-            "integer": random.randint(1, 1000),
+            "real": x,
+            "integer": y,
         }
 
 def generate_ctsv(f, separator, header, seq, keys):
