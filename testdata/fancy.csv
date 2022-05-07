@@ -1,0 +1,6 @@
+id,price,description
+1234,15.99,"A fancy thing"
+1235,20.99,"Another thing, even fancier"
+1236,299.99,"A thing so fancy that it
+needs multiple lines to describe it"
+1237,10,a cheaper item
