@@ -132,9 +132,29 @@ func (s *Stream) Select(columns []*Accessor) (*Reader, error) {
 		return nil
 	}
 
-	return &Reader{read: readrow}, nil
+	return &Reader{
+		tupleSize: len(indices),
+		read:      readrow,
+	}, nil
 }
 
 func (r *Reader) Read(out []string) error {
 	return r.read(out)
+}
+
+func (r *Reader) ForEach(f func([]string) error) error {
+	for {
+		tuple := make([]string, r.tupleSize)
+
+		if err := r.Read(tuple); err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+
+		if err := f(tuple); err != nil {
+			return err
+		}
+	}
 }

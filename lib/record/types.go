@@ -16,5 +16,6 @@ type Accessor struct {
 }
 
 type Reader struct {
-	read func([]string) error
+	tupleSize int
+	read      func([]string) error
 }
