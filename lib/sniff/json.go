@@ -6,13 +6,14 @@ import (
 	"io"
 	"strings"
 
+	"github.com/bcicen/jstream"
 	"github.com/steinarvk/chaxy/lib/chaxyvalue"
 )
 
 func jsonlParser(r io.Reader) (*Descriptor, error) {
 	scanner := bufio.NewScanner(r)
 
-	valuesSeen := map[string][]string{}
+	var objects []interface{}
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -28,6 +29,21 @@ func jsonlParser(r io.Reader) (*Descriptor, error) {
 			return nil, nil
 		}
 
+		objects = append(objects, generic)
+	}
+
+	// Read error?
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return autodetectFromRecords(FormatJSONL, objects)
+}
+
+func autodetectFromRecords(format FormatType, objects []interface{}) (*Descriptor, error) {
+	valuesSeen := map[string][]string{}
+
+	for _, generic := range objects {
 		flattened, err := flattenObject(generic)
 		if err != nil {
 			return nil, err
@@ -43,17 +59,12 @@ func jsonlParser(r io.Reader) (*Descriptor, error) {
 		}
 	}
 
-	// Read error?
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
 	if len(valuesSeen) == 0 {
 		return nil, nil
 	}
 
 	desc := &Descriptor{
-		Format:     FormatJSONL,
+		Format:     format,
 		FieldTypes: map[string]ValueType{},
 	}
 
@@ -62,4 +73,25 @@ func jsonlParser(r io.Reader) (*Descriptor, error) {
 	}
 
 	return desc, nil
+}
+
+func jsonArrayParser(r io.Reader) (*Descriptor, error) {
+	var objects []interface{}
+
+	decoder := jstream.NewDecoder(r, 1)
+	for rec := range decoder.Stream() {
+		objects = append(objects, rec.Value)
+	}
+
+	if len(objects) < 2 {
+		return nil, nil
+	}
+
+	// last one might be partial
+	objects = objects[:len(objects)-1]
+
+	// ignore errors!
+	_ = decoder.Err()
+
+	return autodetectFromRecords(FormatJSON, objects)
 }

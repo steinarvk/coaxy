@@ -37,6 +37,12 @@ func (e errOutOfBounds) Error() string {
 	return fmt.Sprintf("index access [%d] out of bounds (length %d)", e.index, e.length)
 }
 
+type nullRecord struct{}
+
+func (_ nullRecord) AsValue() (string, error)                    { return "", nil }
+func (_ nullRecord) GetByIndex(int) (interfaces.Record, error)   { return nullRecord{}, nil }
+func (_ nullRecord) GetByName(string) (interfaces.Record, error) { return nullRecord{}, nil }
+
 type valueRecord struct {
 	value string
 }
@@ -95,7 +101,7 @@ func (j jsonObjectRecord) GetByIndex(int) (interfaces.Record, error) {
 func (j jsonObjectRecord) GetByName(k string) (interfaces.Record, error) {
 	v, ok := j.values[k]
 	if !ok {
-		return nil, errNoSuchField{field: k}
+		return nullRecord{}, nil
 	}
 	return jsonValueToRecord(v)
 }
@@ -109,8 +115,11 @@ func (j jsonArrayRecord) AsValue() (string, error) {
 }
 
 func (j jsonArrayRecord) GetByIndex(index int) (interfaces.Record, error) {
-	if index < 0 || index >= len(j.values) {
+	if index < 0 {
 		return nil, errOutOfBounds{index, len(j.values)}
+	}
+	if index >= len(j.values) {
+		return nullRecord{}, nil
 	}
 	return jsonValueToRecord(j.values[index])
 }

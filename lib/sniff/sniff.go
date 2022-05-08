@@ -1,6 +1,9 @@
 package sniff
 
-import "errors"
+import (
+	"bytes"
+	"errors"
+)
 
 // Things to detect:
 //   - CSV/TSV/SSV with header
@@ -23,6 +26,14 @@ func Sniff(data []byte) (*Descriptor, error) {
 		if desc != nil {
 			return desc, nil
 		}
+	}
+
+	desc, err := jsonArrayParser(bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	if desc != nil {
+		return desc, nil
 	}
 
 	return nil, errAutodetectFailed

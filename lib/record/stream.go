@@ -63,6 +63,9 @@ func OpenStream(r io.Reader) (*Stream, error) {
 		rv.readRecord = readrecord
 	} else {
 		switch descriptor.Format {
+		case sniff.FormatJSON:
+			rv.readRecord = makeJSONArrayReader(r)
+
 		case sniff.FormatJSONL:
 			rv.readRecord = makeJSONLRecordReader(r)
 

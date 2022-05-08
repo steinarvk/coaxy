@@ -1,7 +1,6 @@
 package sniff
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -35,7 +34,7 @@ func flattenObject(root interface{}) (map[string]interface{}, error) {
 			}
 
 		default:
-			err = errors.New("invalid JSON value")
+			err = fmt.Errorf("invalid JSON value: %v", obj)
 		}
 	}
 
