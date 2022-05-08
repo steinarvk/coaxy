@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/steinarvk/chaxy/lib/interfaces"
 )
 
-func makeJSONLRecordReader(r io.Reader) func() (record, error) {
+func makeJSONLRecordReader(r io.Reader) func() (interfaces.Record, error) {
 	scanner := bufio.NewScanner(r)
 
 	lineno := 0
 
-	return func() (record, error) {
+	return func() (interfaces.Record, error) {
 		if err := scanner.Err(); err != nil {
 			return nil, err
 		}

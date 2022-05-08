@@ -1,0 +1,89 @@
+package chaxyexpr
+
+// name
+// expr DOT name
+// expr LBRACKET index RBRACKET 
+// expr LBRACKET quoted-string RBRACKET 
+
+type parser Peg {
+  expr Expr
+  identifier string
+  stringLiteral string
+  integer int
+}
+
+Expr <- Root PathComponent* END
+
+Root <- RootField / RootIndex / BracketedRootIndex / BracketedRootField
+
+PathComponent
+  <- ( FieldAccess
+     / IndexAccess
+     / BracketedFieldAccess
+     / BracketedIndexAccess
+     )
+
+RootField <- (DOLLAR DOT)? Identifier {
+  p.expr = rootField(p.identifier)
+}
+
+RootIndex <- (DOLLAR DOT)? Integer {
+  p.expr = rootIndex(p.integer)
+}
+
+BracketedRootIndex <- DOLLAR LBRACKET Integer RBRACKET {
+  p.expr = rootIndex(p.integer)
+}
+
+BracketedRootField <- DOLLAR LBRACKET StringLiteral RBRACKET {
+  p.expr = rootField(p.stringLiteral)
+}
+
+FieldAccess <- DOT Identifier {
+  p.expr = fieldAccess{p.expr, p.identifier}
+}
+
+BracketedFieldAccess <- LBRACKET StringLiteral RBRACKET {
+  p.expr = fieldAccess{p.expr, p.stringLiteral}
+}
+
+BracketedIndexAccess <- LBRACKET Integer RBRACKET {
+  p.expr = indexAccess{p.expr, p.integer}
+}
+
+IndexAccess <- DOT Integer {
+  p.expr = indexAccess{p.expr, p.integer}
+}
+
+DOT <- '.'
+LBRACKET <- '['
+RBRACKET <- ']'
+DOLLAR <- '$'
+
+DQUOTE <- '"'
+BACKSLASH <- '\\'
+
+
+StringLiteral <- < DQUOTE StringChar* DQUOTE > {
+  s, _ := strconv.Unquote(text)
+  p.stringLiteral = s
+}
+
+StringChar <- Escape / ![\"\n\\] .
+
+Escape <- BACKSLASH [\"\n\\]
+
+
+Integer <- < '0' / ([1-9] [0-9]*) > {
+  n, _ := strconv.Atoi(text)
+  p.integer = n
+}
+
+Identifier <- < IdentifierInitialChar IdentifierContinuedChar* > {
+  p.identifier = text
+}
+
+IdentifierInitialChar <- [a-zA-Z]
+IdentifierContinuedChar <- [a-zA-Z_0-9]
+
+END <- !.

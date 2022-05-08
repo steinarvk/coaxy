@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/steinarvk/chaxy/lib/gnuplot"
+	"github.com/steinarvk/chaxy/lib/interfaces"
 	"github.com/steinarvk/chaxy/lib/plotspec"
 	"github.com/steinarvk/chaxy/lib/record"
 )
@@ -26,7 +27,7 @@ func init() {
 				return fmt.Errorf("must specify exactly two fields; got %v", args)
 			}
 
-			var columns []*record.Accessor
+			var columns []interfaces.Accessor
 
 			for _, arg := range args {
 				field, err := stream.ResolveField(arg)

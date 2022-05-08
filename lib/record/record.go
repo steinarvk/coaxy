@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/steinarvk/chaxy/lib/chaxyvalue"
+	"github.com/steinarvk/chaxy/lib/interfaces"
 )
 
 var (
@@ -36,12 +37,6 @@ func (e errOutOfBounds) Error() string {
 	return fmt.Sprintf("index access [%d] out of bounds (length %d)", e.index, e.length)
 }
 
-type record interface {
-	GetByIndex(int) (record, error)
-	GetByName(string) (record, error)
-	AsValue() (string, error)
-}
-
 type valueRecord struct {
 	value string
 }
@@ -50,11 +45,11 @@ func (v valueRecord) AsValue() (string, error) {
 	return v.value, nil
 }
 
-func (v valueRecord) GetByIndex(index int) (record, error) {
+func (v valueRecord) GetByIndex(index int) (interfaces.Record, error) {
 	return nil, errNotIndexable
 }
 
-func (v valueRecord) GetByName(name string) (record, error) {
+func (v valueRecord) GetByName(name string) (interfaces.Record, error) {
 	return nil, errNoFields
 }
 
@@ -67,14 +62,14 @@ func (t tupleRecord) AsValue() (string, error) {
 	return "", errNotAPrimitive
 }
 
-func (t tupleRecord) GetByIndex(index int) (record, error) {
+func (t tupleRecord) GetByIndex(index int) (interfaces.Record, error) {
 	if index < 0 || index >= len(t.values) {
 		return nil, errOutOfBounds{index, len(t.values)}
 	}
 	return valueRecord{t.values[index]}, nil
 }
 
-func (t tupleRecord) GetByName(name string) (record, error) {
+func (t tupleRecord) GetByName(name string) (interfaces.Record, error) {
 	if t.indexByName != nil {
 		index, ok := t.indexByName[name]
 		if ok {
@@ -93,11 +88,11 @@ func (j jsonObjectRecord) AsValue() (string, error) {
 	return "", errNotAPrimitive
 }
 
-func (j jsonObjectRecord) GetByIndex(int) (record, error) {
+func (j jsonObjectRecord) GetByIndex(int) (interfaces.Record, error) {
 	return nil, errNotIndexable
 }
 
-func (j jsonObjectRecord) GetByName(k string) (record, error) {
+func (j jsonObjectRecord) GetByName(k string) (interfaces.Record, error) {
 	v, ok := j.values[k]
 	if !ok {
 		return nil, errNoSuchField{field: k}
@@ -113,18 +108,18 @@ func (j jsonArrayRecord) AsValue() (string, error) {
 	return "", errNotAPrimitive
 }
 
-func (j jsonArrayRecord) GetByIndex(index int) (record, error) {
+func (j jsonArrayRecord) GetByIndex(index int) (interfaces.Record, error) {
 	if index < 0 || index >= len(j.values) {
 		return nil, errOutOfBounds{index, len(j.values)}
 	}
 	return jsonValueToRecord(j.values[index])
 }
 
-func (j jsonArrayRecord) GetByName(string) (record, error) {
+func (j jsonArrayRecord) GetByName(string) (interfaces.Record, error) {
 	return nil, errNoFields
 }
 
-func jsonValueToRecord(value interface{}) (record, error) {
+func jsonValueToRecord(value interface{}) (interfaces.Record, error) {
 	switch v := value.(type) {
 	case []interface{}:
 		return jsonArrayRecord{v}, nil

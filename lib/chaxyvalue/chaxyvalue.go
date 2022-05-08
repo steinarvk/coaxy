@@ -12,6 +12,9 @@ func JSONPrimitiveToString(value interface{}) (string, error) {
 	case int:
 		return fmt.Sprintf("%d", v), nil
 
+	case string:
+		return v, nil
+
 	case bool:
 		if v {
 			return "true", nil

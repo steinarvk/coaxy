@@ -6,6 +6,8 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/steinarvk/chaxy/lib/chaxyexpr"
+	"github.com/steinarvk/chaxy/lib/interfaces"
 	"github.com/steinarvk/chaxy/lib/prereader"
 	"github.com/steinarvk/chaxy/lib/sniff"
 )
@@ -49,7 +51,7 @@ func OpenStream(r io.Reader) (*Stream, error) {
 			}
 		}
 
-		readrecord := func() (record, error) {
+		readrecord := func() (interfaces.Record, error) {
 			tuple, err := tupleReader.ReadTuple()
 			if err != nil {
 				return nil, err
@@ -72,7 +74,7 @@ func OpenStream(r io.Reader) (*Stream, error) {
 	return rv, nil
 }
 
-func (s *Stream) ResolveField(query string) (*Accessor, error) {
+func (s *Stream) ResolveField(query string) (interfaces.Accessor, error) {
 	rv, err := s.resolveField(query)
 	if err != nil {
 		return nil, fmt.Errorf("invalid field accessor %q: %w", query, err)
@@ -80,7 +82,7 @@ func (s *Stream) ResolveField(query string) (*Accessor, error) {
 	return rv, nil
 }
 
-func (s *Stream) resolveField(query string) (*Accessor, error) {
+func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 	desc := s.descriptor
 
 	n, err := strconv.Atoi(query)
@@ -97,7 +99,7 @@ func (s *Stream) resolveField(query string) (*Accessor, error) {
 			return nil, fmt.Errorf("out of bounds for %q with %d columns", desc.Format, desc.NumColumns)
 		}
 
-		return &Accessor{
+		return &simpleAccessor{
 			byIndex: true,
 			index:   n - 1,
 		}, nil
@@ -109,29 +111,22 @@ func (s *Stream) resolveField(query string) (*Accessor, error) {
 
 	for index, name := range desc.ColumnNames {
 		if name == query {
-			return &Accessor{
+			return &simpleAccessor{
 				byIndex: true,
 				index:   index,
 			}, nil
 		}
 	}
 
-	// is the query literally a known field?
-	_, ok := desc.FieldTypes[query]
-	if ok {
-		return &Accessor{
-			bySimpleName: true,
-			name:         query,
-		}, nil
+	expr, err := chaxyexpr.Parse(query)
+	if err != nil {
+		return nil, err
 	}
 
-	// no more advanced queries supported currently.
-	// to come: path-based, regex-based, as well as transformers (e.g. "categorized integer").
-
-	return nil, errors.New("no such column")
+	return expr.MakeAccessor(), nil
 }
 
-func (s *Stream) Select(columns []*Accessor) (*Reader, error) {
+func (s *Stream) Select(columns []interfaces.Accessor) (*Reader, error) {
 	if s.selected {
 		return nil, fmt.Errorf("Select() was already called")
 	}
@@ -148,7 +143,12 @@ func (s *Stream) Select(columns []*Accessor) (*Reader, error) {
 		}
 
 		for outindex, accessor := range columns {
-			value, err := accessor.getValue(rec)
+			valuerec, err := accessor.Extract(rec)
+			if err != nil {
+				return err
+			}
+
+			value, err := valuerec.AsValue()
 			if err != nil {
 				return err
 			}

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/steinarvk/chaxy/lib/interfaces"
 	"github.com/steinarvk/chaxy/lib/record"
 )
 
@@ -34,7 +35,7 @@ func init() {
 				return errors.New("no fields specified")
 			}
 
-			var columns []*record.Accessor
+			var columns []interfaces.Accessor
 
 			for _, arg := range args {
 				field, err := stream.ResolveField(arg)

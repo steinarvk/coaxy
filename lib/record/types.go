@@ -1,12 +1,13 @@
 package record
 
 import (
+	"github.com/steinarvk/chaxy/lib/interfaces"
 	"github.com/steinarvk/chaxy/lib/sniff"
 )
 
 type Stream struct {
 	descriptor *sniff.Descriptor
-	readRecord func() (record, error)
+	readRecord func() (interfaces.Record, error)
 	selected   bool
 }
 

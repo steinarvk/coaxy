@@ -1,43 +1,27 @@
 package record
 
-import "errors"
+import (
+	"errors"
 
-type Accessor struct {
+	"github.com/steinarvk/chaxy/lib/interfaces"
+)
+
+type simpleAccessor struct {
 	byIndex      bool
 	bySimpleName bool
 	index        int
 	name         string
 }
 
-func (a *Accessor) getValue(rec record) (string, error) {
+func (a *simpleAccessor) Extract(rec interfaces.Record) (interfaces.Record, error) {
 	switch {
 	case a.byIndex:
-		valuerec, err := rec.GetByIndex(a.index)
-		if err != nil {
-			return "", nil
-		}
-
-		value, err := valuerec.AsValue()
-		if err != nil {
-			return "", err
-		}
-
-		return value, nil
+		return rec.GetByIndex(a.index)
 
 	case a.bySimpleName:
-		valuerec, err := rec.GetByName(a.name)
-		if err != nil {
-			return "", nil
-		}
-
-		value, err := valuerec.AsValue()
-		if err != nil {
-			return "", err
-		}
-
-		return value, nil
+		return rec.GetByName(a.name)
 
 	default:
-		return "", errors.New("invalid accessor")
+		return nil, errors.New("invalid accessor")
 	}
 }
