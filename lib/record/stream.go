@@ -6,10 +6,10 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/steinarvk/chaxy/lib/chaxyexpr"
-	"github.com/steinarvk/chaxy/lib/interfaces"
-	"github.com/steinarvk/chaxy/lib/prereader"
-	"github.com/steinarvk/chaxy/lib/sniff"
+	"github.com/steinarvk/coaxy/lib/coaxyexpr"
+	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/prereader"
+	"github.com/steinarvk/coaxy/lib/sniff"
 )
 
 const (
@@ -121,7 +121,7 @@ func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 		}
 	}
 
-	expr, err := chaxyexpr.Parse(query)
+	expr, err := coaxyexpr.Parse(query)
 	if err != nil {
 		return nil, err
 	}

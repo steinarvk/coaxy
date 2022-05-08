@@ -13,14 +13,14 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "chaxy",
-	Short: "chaxy is a tool to plot charts from data",
+	Use:   "coaxy",
+	Short: "coaxy is a tool to plot charts from data",
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chaxy.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.coaxy.yaml)")
 }
 
 func initConfig() {
@@ -34,7 +34,7 @@ func initConfig() {
 		}
 
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".chaxy")
+		viper.SetConfigName(".coaxy")
 	}
 
 	viper.AutomaticEnv()

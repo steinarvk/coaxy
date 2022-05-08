@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/bcicen/jstream"
-	"github.com/steinarvk/chaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 func makeJSONArrayReader(r io.Reader) func() (interfaces.Record, error) {

@@ -1,4 +1,4 @@
-package chaxyexpr
+package coaxyexpr
 
 import "testing"
 

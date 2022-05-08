@@ -1,6 +1,6 @@
 package main
 
-import "github.com/steinarvk/chaxy/cmd"
+import "github.com/steinarvk/coaxy/cmd"
 
 func main() {
 	cmd.Execute()

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/bcicen/jstream"
-	"github.com/steinarvk/chaxy/lib/chaxyvalue"
+	"github.com/steinarvk/coaxy/lib/coaxyvalue"
 )
 
 func jsonlParser(r io.Reader) (*Descriptor, error) {
@@ -50,7 +50,7 @@ func autodetectFromRecords(format FormatType, objects []interface{}) (*Descripto
 		}
 
 		for key, value := range flattened {
-			stringified, err := chaxyvalue.JSONPrimitiveToString(value)
+			stringified, err := coaxyvalue.JSONPrimitiveToString(value)
 			if err != nil {
 				return nil, err
 			}

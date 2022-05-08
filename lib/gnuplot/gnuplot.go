@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/steinarvk/chaxy/lib/plotspec"
+	"github.com/steinarvk/coaxy/lib/plotspec"
 )
 
 type Options struct {

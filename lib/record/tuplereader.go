@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/steinarvk/chaxy/lib/sniff"
+	"github.com/steinarvk/coaxy/lib/sniff"
 )
 
 type tupleReader struct {

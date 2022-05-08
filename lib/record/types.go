@@ -1,8 +1,8 @@
 package record
 
 import (
-	"github.com/steinarvk/chaxy/lib/interfaces"
-	"github.com/steinarvk/chaxy/lib/sniff"
+	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/sniff"
 )
 
 type Stream struct {

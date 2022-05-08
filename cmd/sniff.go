@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steinarvk/chaxy/lib/record"
+	"github.com/steinarvk/coaxy/lib/record"
 )
 
 func init() {

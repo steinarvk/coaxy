@@ -1,4 +1,4 @@
-module github.com/steinarvk/chaxy
+module github.com/steinarvk/coaxy
 
 go 1.18
 

@@ -3,7 +3,7 @@ package record
 import (
 	"errors"
 
-	"github.com/steinarvk/chaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 type simpleAccessor struct {

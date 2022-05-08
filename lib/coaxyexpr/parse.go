@@ -1,12 +1,12 @@
-package chaxyexpr
+package coaxyexpr
 
 import (
 	"fmt"
 	"regexp"
 	"strconv"
 
-	"github.com/steinarvk/chaxy/lib/accessor"
-	"github.com/steinarvk/chaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/accessor"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 var unquotedFieldRE = regexp.MustCompile(`^[a-zA-Z][a-zA-Z_0-9]*$`)

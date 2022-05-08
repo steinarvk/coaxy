@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/steinarvk/chaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 func makeJSONLRecordReader(r io.Reader) func() (interfaces.Record, error) {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/steinarvk/chaxy/lib/chaxyvalue"
-	"github.com/steinarvk/chaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/coaxyvalue"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 var (
@@ -137,7 +137,7 @@ func jsonValueToRecord(value interface{}) (interfaces.Record, error) {
 		return jsonObjectRecord{v}, nil
 
 	default:
-		asString, err := chaxyvalue.JSONPrimitiveToString(value)
+		asString, err := coaxyvalue.JSONPrimitiveToString(value)
 		if err != nil {
 			return nil, err
 		}
