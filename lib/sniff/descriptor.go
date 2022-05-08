@@ -20,20 +20,40 @@ const (
 )
 
 const (
-	KindInt    = ValueKind("int")
-	KindNumber = ValueKind("number")
-	KindString = ValueKind("string")
+	KindInt       = ValueKind("int")
+	KindNumber    = ValueKind("number")
+	KindString    = ValueKind("string")
+	KindNull      = ValueKind("null")
+	KindDate      = ValueKind("date")
+	KindTimestamp = ValueKind("timestamp")
 )
 
 type ValueType struct {
-	Kind ValueKind
+	Kind     ValueKind
+	Optional bool
+	Format   string
+}
+
+func (t ValueType) IsNull() bool {
+	return t.Kind == KindNull
 }
 
 func (t ValueType) String() string {
 	if t.Kind == "" {
 		return "ValueType{}"
 	}
-	return string(t.Kind)
+
+	rv := string(t.Kind)
+
+	if t.Format != "" {
+		rv = fmt.Sprintf("%s[%s]", rv, t.Format)
+	}
+
+	if t.Optional {
+		rv = fmt.Sprintf("Optional[%s]", rv)
+	}
+
+	return rv
 }
 
 type Descriptor struct {
@@ -65,6 +85,9 @@ func (d *Descriptor) Show(w io.Writer) {
 	}
 	sort.Strings(fieldNames)
 	for _, k := range fieldNames {
-		fmt.Fprintf(w, "  %q: %v\n", k, d.FieldTypes[k].String())
+		ft := d.FieldTypes[k]
+		if !ft.IsNull() {
+			fmt.Fprintf(w, "  %q: %v\n", k, ft.String())
+		}
 	}
 }

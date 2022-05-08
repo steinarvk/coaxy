@@ -5,14 +5,9 @@ import (
 )
 
 type Stream struct {
-	descriptor  *sniff.Descriptor
-	tupleReader *tupleReader
-	selected    bool
-}
-
-type Accessor struct {
-	byIndex bool
-	index   int
+	descriptor *sniff.Descriptor
+	readRecord func() (record, error)
+	selected   bool
 }
 
 type Reader struct {

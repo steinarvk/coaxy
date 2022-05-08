@@ -39,9 +39,34 @@ func OpenStream(r io.Reader) (*Stream, error) {
 			return nil, err
 		}
 
-		rv.tupleReader = tupleReader
+		var indexByName map[string]int
+
+		if len(descriptor.ColumnNames) > 0 {
+			indexByName = map[string]int{}
+
+			for i, name := range descriptor.ColumnNames {
+				indexByName[name] = i
+			}
+		}
+
+		readrecord := func() (record, error) {
+			tuple, err := tupleReader.ReadTuple()
+			if err != nil {
+				return nil, err
+			}
+
+			return tupleRecord{indexByName: indexByName, values: tuple}, nil
+		}
+
+		rv.readRecord = readrecord
 	} else {
-		return nil, fmt.Errorf("not implemented: non-tuple-based formats")
+		switch descriptor.Format {
+		case sniff.FormatJSONL:
+			rv.readRecord = makeJSONLRecordReader(r)
+
+		default:
+			return nil, fmt.Errorf("unsupported non-tuple-based format: %q", descriptor.Format)
+		}
 	}
 
 	return rv, nil
@@ -91,6 +116,15 @@ func (s *Stream) resolveField(query string) (*Accessor, error) {
 		}
 	}
 
+	// is the query literally a known field?
+	_, ok := desc.FieldTypes[query]
+	if ok {
+		return &Accessor{
+			bySimpleName: true,
+			name:         query,
+		}, nil
+	}
+
 	// no more advanced queries supported currently.
 	// to come: path-based, regex-based, as well as transformers (e.g. "categorized integer").
 
@@ -103,37 +137,30 @@ func (s *Stream) Select(columns []*Accessor) (*Reader, error) {
 	}
 	s.selected = true
 
-	if s.tupleReader == nil {
-		return nil, fmt.Errorf("not implemented: non-tuple-based readers")
-	}
-
-	indices := make([]int, len(columns))
-	for i, col := range columns {
-		if !col.byIndex {
-			return nil, fmt.Errorf("not implemented: non-index-based accessors for tuple-based formats")
-		}
-		indices[i] = col.index
-	}
-
 	readrow := func(out []string) error {
-		if len(out) != len(indices) {
-			return fmt.Errorf("reading tuple of length %d; got buffer of size %d", len(indices), len(out))
+		if len(out) != len(columns) {
+			return fmt.Errorf("reading tuple of length %d; got buffer of size %d", len(columns), len(out))
 		}
 
-		tuple, err := s.tupleReader.ReadTuple()
+		rec, err := s.readRecord()
 		if err != nil {
 			return err
 		}
 
-		for outindex, inindex := range indices {
-			out[outindex] = tuple[inindex]
+		for outindex, accessor := range columns {
+			value, err := accessor.getValue(rec)
+			if err != nil {
+				return err
+			}
+
+			out[outindex] = value
 		}
 
 		return nil
 	}
 
 	return &Reader{
-		tupleSize: len(indices),
+		tupleSize: len(columns),
 		read:      readrow,
 	}, nil
 }

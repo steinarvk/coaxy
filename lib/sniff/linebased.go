@@ -100,6 +100,7 @@ func sniffLines(lines []string) (*Descriptor, error) {
 		makeCSVishParser(FormatCSV, ','),
 		makeCSVishParser(FormatTSV, '\t'),
 		makeCSVishParser(FormatSSV, ' '),
+		jsonlParser,
 	}
 
 	for _, detector := range detectors {
