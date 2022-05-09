@@ -84,7 +84,27 @@ func (a indexAccess) FormatExpression() string {
 	return a.expr.FormatExpression() + fmt.Sprintf("[%d]", a.index)
 }
 
-func Parse(s string) (Expr, error) {
+type parseOpts struct {
+	debug bool
+}
+
+type Option func(*parseOpts) error
+
+func WithDebug(value bool) Option {
+	return func(opts *parseOpts) error {
+		opts.debug = value
+		return nil
+	}
+}
+
+func Parse(s string, options ...Option) (Expr, error) {
+	var opts parseOpts
+	for _, opt := range options {
+		if err := opt(&opts); err != nil {
+			return nil, err
+		}
+	}
+
 	parser := &parser{
 		Buffer: s,
 	}
@@ -97,5 +117,9 @@ func Parse(s string) (Expr, error) {
 
 	parser.Execute()
 
-	return parser.expr, nil
+	if opts.debug {
+		parser.PrintSyntaxTree()
+	}
+
+	return &parser.expression, nil
 }

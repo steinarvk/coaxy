@@ -6,13 +6,19 @@ package coaxyexpr
 // expr LBRACKET quoted-string RBRACKET 
 
 type parser Peg {
-  expr Expr
+  expression expression
   identifier string
   stringLiteral string
   integer int
 }
 
-Expr <- Root PathComponent* END
+Expr <- FilteredExpr (Whitespace? COMMA Whitespace? FilteredExpr)* END
+
+UnfilteredExpr <- Root PathComponent*
+FilteredExpr <- UnfilteredExpr Filter*
+
+Filter <- Whitespace? PIPE Whitespace? FilterCore
+FilterCore <- Identifier
 
 Root <- RootField / RootIndex / BracketedRootIndex / BracketedRootField
 
@@ -24,41 +30,43 @@ PathComponent
      )
 
 RootField <- (DOLLAR DOT)? Identifier {
-  p.expr = rootField(p.identifier)
+  p.expression.addKey(p.identifier)
 }
 
 RootIndex <- (DOLLAR DOT)? Integer {
-  p.expr = rootIndex(p.integer)
+  p.expression.addIndex(p.integer)
 }
 
 BracketedRootIndex <- DOLLAR LBRACKET Integer RBRACKET {
-  p.expr = rootIndex(p.integer)
+  p.expression.addIndex(p.integer)
 }
 
 BracketedRootField <- DOLLAR LBRACKET StringLiteral RBRACKET {
-  p.expr = rootField(p.stringLiteral)
+  p.expression.addKey(p.stringLiteral)
 }
 
 FieldAccess <- DOT Identifier {
-  p.expr = fieldAccess{p.expr, p.identifier}
+  p.expression.addKey(p.identifier)
 }
 
 BracketedFieldAccess <- LBRACKET StringLiteral RBRACKET {
-  p.expr = fieldAccess{p.expr, p.stringLiteral}
+  p.expression.addKey(p.stringLiteral)
 }
 
 BracketedIndexAccess <- LBRACKET Integer RBRACKET {
-  p.expr = indexAccess{p.expr, p.integer}
+  p.expression.addIndex(p.integer)
 }
 
 IndexAccess <- DOT Integer {
-  p.expr = indexAccess{p.expr, p.integer}
+  p.expression.addIndex(p.integer)
 }
 
 DOT <- '.'
 LBRACKET <- '['
 RBRACKET <- ']'
 DOLLAR <- '$'
+PIPE <- '|'
+COMMA <- ','
 
 DQUOTE <- '"'
 BACKSLASH <- '\\'
@@ -85,5 +93,7 @@ Identifier <- < IdentifierInitialChar IdentifierContinuedChar* > {
 
 IdentifierInitialChar <- [a-zA-Z]
 IdentifierContinuedChar <- [a-zA-Z_0-9]
+
+Whitespace <- [\t ]+
 
 END <- !.

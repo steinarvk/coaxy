@@ -17,12 +17,12 @@ func init() {
 			}
 
 			arg := args[0]
-			result, err := coaxyexpr.Parse(arg)
+			result, err := coaxyexpr.Parse(arg, coaxyexpr.WithDebug(true))
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(result)
+			fmt.Println(result.FormatExpression())
 
 			return nil
 		},
