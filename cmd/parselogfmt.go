@@ -26,5 +26,5 @@ func init() {
 		},
 	}
 
-	rootCmd.AddCommand(parselogfmtCmd)
+	debugCmd.AddCommand(parselogfmtCmd)
 }

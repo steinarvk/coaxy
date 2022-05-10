@@ -28,5 +28,5 @@ func init() {
 		},
 	}
 
-	rootCmd.AddCommand(parseexprCmd)
+	debugCmd.AddCommand(parseexprCmd)
 }
