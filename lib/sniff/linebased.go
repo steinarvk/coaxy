@@ -48,6 +48,10 @@ func makeCSVishParser(formatType FormatType, separator rune) func(r io.Reader) (
 			return nil, nil
 		}
 
+		if commonLength <= 1 {
+			return nil, nil
+		}
+
 		columnrecords := make([][]string, commonLength)
 		for _, rec := range tuples {
 			for i, value := range rec {
