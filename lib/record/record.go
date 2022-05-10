@@ -200,7 +200,7 @@ func FromJSONValue(value interface{}) (interfaces.Record, error) {
 
 func FromString(value string) (interfaces.Record, error) {
 	if value == "" {
-		return primitiveValueRecord{""}, nil
+		return nullRecord{}, nil
 	}
 
 	return &stringValueRecord{value: value}, nil

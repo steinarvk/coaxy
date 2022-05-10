@@ -83,7 +83,7 @@ func (v *stringValueRecord) GetByIndex(index int) (interfaces.Record, error) {
 	}
 
 	if v.arrayParse == nil {
-		return nil, errNotIndexable
+		return nullRecord{}, nil
 	}
 
 	return accessJSONArrayByIndex(v.arrayParse, index)
@@ -95,7 +95,7 @@ func (v *stringValueRecord) GetByName(name string) (interfaces.Record, error) {
 	}
 
 	if v.objectParse == nil {
-		return nil, errNoFields
+		return nullRecord{}, nil
 	}
 
 	return accessJSONObjectByName(v.objectParse, name)
