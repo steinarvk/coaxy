@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+
+	"github.com/steinarvk/coaxy/lib/accessor"
+	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 var unquotedFieldRE = regexp.MustCompile(`^[a-zA-Z][a-zA-Z_0-9]*$`)
@@ -15,6 +18,19 @@ func fieldMustBeQuoted(s string) bool {
 type PathComponent struct {
 	Index *int
 	Field *string
+}
+
+func (c PathComponent) MakeAccessor() interfaces.Accessor {
+	switch {
+	case c.Index != nil:
+		return accessor.AtIndex(*c.Index)
+
+	case c.Field != nil:
+		return accessor.AtField(*c.Field)
+
+	default:
+		return nil
+	}
 }
 
 func Index(i int) PathComponent {

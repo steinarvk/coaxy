@@ -12,13 +12,19 @@ type parser Peg {
   integer int
 }
 
-Expr <- FilteredExpr (Whitespace? COMMA Whitespace? FilteredExpr)* END
+Expr <- Path (Whitespace? PIPE Whitespace? ExprElement)* END
 
-UnfilteredExpr <- Root PathComponent*
-FilteredExpr <- UnfilteredExpr Filter*
+ExprElement
+  <- ( Path
+     / Filter
+     )
 
-Filter <- Whitespace? PIPE Whitespace? FilterCore
-FilterCore <- Identifier
+Path <- Root PathComponent*
+
+Filter <- COLON FilterCore
+FilterCore <- Identifier {
+  p.expression.addFilter(p.identifier)
+}
 
 Root <- RootField / RootIndex / BracketedRootIndex / BracketedRootField
 
@@ -29,19 +35,19 @@ PathComponent
      / BracketedIndexAccess
      )
 
-RootField <- (DOLLAR DOT)? Identifier {
+RootField <- Identifier {
   p.expression.addKey(p.identifier)
 }
 
-RootIndex <- (DOLLAR DOT)? Integer {
+RootIndex <- Integer {
   p.expression.addIndex(p.integer)
 }
 
-BracketedRootIndex <- DOLLAR LBRACKET Integer RBRACKET {
+BracketedRootIndex <- LBRACKET Integer RBRACKET {
   p.expression.addIndex(p.integer)
 }
 
-BracketedRootField <- DOLLAR LBRACKET StringLiteral RBRACKET {
+BracketedRootField <- LBRACKET StringLiteral RBRACKET {
   p.expression.addKey(p.stringLiteral)
 }
 
@@ -64,9 +70,8 @@ IndexAccess <- DOT Integer {
 DOT <- '.'
 LBRACKET <- '['
 RBRACKET <- ']'
-DOLLAR <- '$'
 PIPE <- '|'
-COMMA <- ','
+COLON <- ':'
 
 DQUOTE <- '"'
 BACKSLASH <- '\\'

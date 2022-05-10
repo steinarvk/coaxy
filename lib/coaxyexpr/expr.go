@@ -1,95 +1,82 @@
 package coaxyexpr
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/steinarvk/coaxy/lib/accessor"
 	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/record"
 )
 
 type filter struct {
 	name string
 }
 
-type component struct {
-	index  *int
-	key    *string
-	filter *filter
-}
-
-func (c component) stringExpr() string {
-	switch {
-	case c.index != nil:
-		return fmt.Sprintf("%d", *c.index)
-
-	case c.key != nil:
-		if fieldMustBeQuoted(*c.key) {
-			return fmt.Sprintf("[%q]", *c.key)
-		}
-		return *c.key
-
-	default:
-		panic(fmt.Errorf("invalid accessor: %v", c))
-	}
-}
-
-func (c component) makeAccessor() (interfaces.Accessor, error) {
-	switch {
-	case c.index != nil:
-		return accessor.AtIndex(*c.index), nil
-
-	case c.key != nil:
-		return accessor.AtField(*c.key), nil
-
-	default:
-		return nil, fmt.Errorf("invalid accessor: %v", c)
-	}
+func (f filter) FormatFilter() string {
+	return ":" + f.name
 }
 
 type expression struct {
-	components []component
+	priorChunks []*expression
+	filters     []*filter
+	path        record.Path
+}
+
+func (x *expression) flushFilters() {
+	if len(x.filters) > 0 {
+		x.priorChunks = append(x.priorChunks, &expression{
+			path:    x.path,
+			filters: x.filters,
+		})
+		x.path = nil
+		x.filters = nil
+	}
 }
 
 func (x *expression) addIndex(i int) {
-	x.components = append(x.components, component{
-		index: &i,
-	})
+	x.flushFilters()
+	x.path = x.path.Append(record.Index(i))
 }
 
 func (x *expression) addKey(k string) {
-	x.components = append(x.components, component{
-		key: &k,
-	})
+	x.flushFilters()
+	x.path = x.path.Append(record.Field(k))
 }
 
-func (x *expression) addSimpleFilter(name string) {
-	x.components = append(x.components, component{
-		filter: &filter{
-			name: name,
-		},
+func (x *expression) addFilter(filt string) {
+	x.filters = append(x.filters, &filter{
+		name: filt,
 	})
 }
 
 func (x *expression) FormatExpression() string {
-	var xs []string
+	var chunks []string
 
-	for _, c := range x.components {
-		xs = append(xs, c.stringExpr())
+	for _, chunk := range x.priorChunks {
+		chunkformatted := chunk.FormatExpression()
+		chunks = append(chunks, chunkformatted)
 	}
 
-	return strings.Join(xs, ",")
+	if len(x.path) > 0 {
+		path, err := x.path.PathExpression()
+		if err != nil {
+			panic(err)
+		}
+		chunks = append(chunks, path)
+	}
+
+	for _, filt := range x.filters {
+		chunks = append(chunks, filt.FormatFilter())
+	}
+
+	return strings.Join(chunks, " | ")
 }
 
 func (x *expression) MakeAccessor() interfaces.Accessor {
 	var accessors []interfaces.Accessor
 
-	for _, comp := range x.components {
-		acc, err := comp.makeAccessor()
-		if err != nil {
-			return accessor.Error{err}
-		}
-		accessors = append(accessors, acc)
+	for _, comp := range x.path {
+		accessors = append(accessors, comp.MakeAccessor())
 	}
 
 	return accessor.Func(func(rec interfaces.Record) (interfaces.Record, error) {
