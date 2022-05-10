@@ -13,9 +13,9 @@ import (
 )
 
 func init() {
-	normalizeCmd := &cobra.Command{
-		Use:   "normalize [FIELDS...]",
-		Short: "normalize data to a TSV",
+	extractCmd := &cobra.Command{
+		Use:   "extract [FIELDS...]",
+		Short: "extract columns from file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stream, err := coaxy.OpenStream(os.Stdin)
 			if err != nil {
@@ -70,5 +70,5 @@ func init() {
 		},
 	}
 
-	rootCmd.AddCommand(normalizeCmd)
+	rootCmd.AddCommand(extractCmd)
 }
