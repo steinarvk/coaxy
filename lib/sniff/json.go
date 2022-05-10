@@ -7,13 +7,14 @@ import (
 	"strings"
 
 	"github.com/bcicen/jstream"
-	"github.com/steinarvk/coaxy/lib/coaxyvalue"
+	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/record"
 )
 
 func jsonlParser(r io.Reader) (*Descriptor, error) {
 	scanner := bufio.NewScanner(r)
 
-	var objects []interface{}
+	var records []interfaces.Record
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -29,7 +30,12 @@ func jsonlParser(r io.Reader) (*Descriptor, error) {
 			return nil, nil
 		}
 
-		objects = append(objects, generic)
+		rec, err := record.FromJSONValue(generic)
+		if err != nil {
+			return nil, err
+		}
+
+		records = append(records, rec)
 	}
 
 	// Read error?
@@ -37,50 +43,38 @@ func jsonlParser(r io.Reader) (*Descriptor, error) {
 		return nil, err
 	}
 
-	return autodetectFromRecords(FormatJSONL, objects)
+	return autodetectFromRecords(FormatJSONL, records)
 }
 
-func autodetectFromRecords(format FormatType, objects []interface{}) (*Descriptor, error) {
-	valuesSeen := map[string][]string{}
-
-	for _, generic := range objects {
-		flattened, err := flattenObject(generic)
-		if err != nil {
-			return nil, err
-		}
-
-		for key, value := range flattened {
-			stringified, err := coaxyvalue.JSONPrimitiveToString(value)
-			if err != nil {
-				return nil, err
-			}
-
-			valuesSeen[key] = append(valuesSeen[key], stringified)
-		}
+func autodetectFromRecords(format FormatType, objects []interfaces.Record) (*Descriptor, error) {
+	nestedTypes, err := DetectNestedFields(objects)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(valuesSeen) == 0 {
+	if len(nestedTypes) == 0 {
 		return nil, nil
 	}
 
 	desc := &Descriptor{
 		Format:     format,
-		FieldTypes: map[string]ValueType{},
-	}
-
-	for key, values := range valuesSeen {
-		desc.FieldTypes[key] = DetectValueType(values)
+		FieldTypes: nestedTypes,
 	}
 
 	return desc, nil
 }
 
 func jsonArrayParser(r io.Reader) (*Descriptor, error) {
-	var objects []interface{}
+	var objects []interfaces.Record
 
 	decoder := jstream.NewDecoder(r, 1)
-	for rec := range decoder.Stream() {
-		objects = append(objects, rec.Value)
+	for val := range decoder.Stream() {
+		rec, err := record.FromJSONValue(val.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		objects = append(objects, rec)
 	}
 
 	if len(objects) < 2 {

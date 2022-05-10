@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": 1652203308.6361406,
+    "text": "msg=helloworld severity=info status=200 latency=0.1234"
+  },
+  {
+    "timestamp": 1652203358.5763364,
+    "text": "msg=what severity=info status=200 latency=1.2345"
+  },
+  {
+    "timestamp": 1652203358.5763364,
+    "text": "severity=error msg=oops"
+  },
+  {
+    "timestamp": 1652203358.5763364,
+    "text": "severity=error msg=oops"
+  },
+  {
+    "timestamp": 1652203358.5763364,
+    "text": "msg=what severity=info status=200 latency=1.2345"
+  }
+]

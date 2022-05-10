@@ -1,4 +1,4 @@
-package record
+package coaxy
 
 import (
 	"github.com/steinarvk/coaxy/lib/interfaces"

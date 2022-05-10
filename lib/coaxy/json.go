@@ -1,10 +1,11 @@
-package record
+package coaxy
 
 import (
 	"io"
 
 	"github.com/bcicen/jstream"
 	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/record"
 )
 
 func makeJSONArrayReader(r io.Reader) func() (interfaces.Record, error) {
@@ -23,6 +24,6 @@ func makeJSONArrayReader(r io.Reader) func() (interfaces.Record, error) {
 			return nil, io.EOF
 		}
 
-		return jsonValueToRecord(rec.Value)
+		return record.FromJSONValue(rec.Value)
 	}
 }

@@ -1,4 +1,4 @@
-package record
+package coaxy
 
 import (
 	"errors"
@@ -6,9 +6,11 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/steinarvk/coaxy/lib/accessor"
 	"github.com/steinarvk/coaxy/lib/coaxyexpr"
 	"github.com/steinarvk/coaxy/lib/interfaces"
 	"github.com/steinarvk/coaxy/lib/prereader"
+	"github.com/steinarvk/coaxy/lib/record"
 	"github.com/steinarvk/coaxy/lib/sniff"
 )
 
@@ -57,7 +59,7 @@ func OpenStream(r io.Reader) (*Stream, error) {
 				return nil, err
 			}
 
-			return tupleRecord{indexByName: indexByName, values: tuple}, nil
+			return record.FromStringTuple(tuple, indexByName)
 		}
 
 		rv.readRecord = readrecord
@@ -102,10 +104,7 @@ func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 			return nil, fmt.Errorf("out of bounds for %q with %d columns", desc.Format, desc.NumColumns)
 		}
 
-		return &simpleAccessor{
-			byIndex: true,
-			index:   n - 1,
-		}, nil
+		return accessor.AtIndex(n - 1), nil
 	}
 
 	if desc.TupleBased && len(desc.ColumnNames) == 0 {
@@ -114,10 +113,7 @@ func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 
 	for index, name := range desc.ColumnNames {
 		if name == query {
-			return &simpleAccessor{
-				byIndex: true,
-				index:   index,
-			}, nil
+			return accessor.AtIndex(index), nil
 		}
 	}
 

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/steinarvk/coaxy/lib/coaxy"
 	"github.com/steinarvk/coaxy/lib/interfaces"
-	"github.com/steinarvk/coaxy/lib/record"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		Use:   "normalize [FIELDS...]",
 		Short: "normalize data to a TSV",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			stream, err := record.OpenStream(os.Stdin)
+			stream, err := coaxy.OpenStream(os.Stdin)
 			if err != nil {
 				return err
 			}

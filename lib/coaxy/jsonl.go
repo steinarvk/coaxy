@@ -1,4 +1,4 @@
-package record
+package coaxy
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/steinarvk/coaxy/lib/interfaces"
+	"github.com/steinarvk/coaxy/lib/record"
 )
 
 func makeJSONLRecordReader(r io.Reader) func() (interfaces.Record, error) {
@@ -33,7 +34,7 @@ func makeJSONLRecordReader(r io.Reader) func() (interfaces.Record, error) {
 				return nil, fmt.Errorf("failed to parse JSON on line %d: %w", lineno, err)
 			}
 
-			return jsonValueToRecord(generic)
+			return record.FromJSONValue(generic)
 		}
 
 		if err := scanner.Err(); err != nil {
