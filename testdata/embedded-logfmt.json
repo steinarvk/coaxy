@@ -5,7 +5,12 @@
   },
   {
     "timestamp": 1652203358.5763364,
-    "text": "msg=what severity=info status=200 latency=1.2345"
+    "text": "msg=what severity=info status=200 latency=1.2345",
+    "deeply": {
+      "nested": {
+        "field": "with=value in=logformat"
+      }
+    }
   },
   {
     "timestamp": 1652203358.5763364,

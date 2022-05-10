@@ -1,18 +1,16 @@
 package sniff
 
 import (
-	"fmt"
-
 	"github.com/steinarvk/coaxy/lib/interfaces"
 	"github.com/steinarvk/coaxy/lib/record"
 )
 
-func visitRecordValues(rec interfaces.Record, visit func(string, string) error) error {
+func visitRecordValues(rec interfaces.Record, visit func(record.Path, string) error) error {
 	value, err := rec.AsValue()
 	if err != nil && !record.IsNotAPrimitive(err) {
 		return err
 	} else {
-		visit("", value)
+		visit(nil, value)
 	}
 
 	for _, index := range rec.Indices() {
@@ -21,8 +19,8 @@ func visitRecordValues(rec interfaces.Record, visit func(string, string) error) 
 			return err
 		}
 
-		if err := visitRecordValues(child, func(key, value string) error {
-			return visit(fmt.Sprintf("[%d]%s", index, key), value)
+		if err := visitRecordValues(child, func(key record.Path, value string) error {
+			return visit(key.Prepend(record.Index(index)), value)
 		}); err != nil {
 			return err
 		}
@@ -34,8 +32,8 @@ func visitRecordValues(rec interfaces.Record, visit func(string, string) error) 
 			return err
 		}
 
-		if err := visitRecordValues(child, func(key, value string) error {
-			return visit(fmt.Sprintf("[%q]%s", name, key), value)
+		if err := visitRecordValues(child, func(key record.Path, value string) error {
+			return visit(key.Prepend(record.Field(name)), value)
 		}); err != nil {
 			return err
 		}
@@ -48,8 +46,13 @@ func collectNestedValues(records []interfaces.Record) (map[string][]string, erro
 	seen := map[string]bool{}
 
 	for i := range records {
-		if err := visitRecordValues(records[i], func(key, value string) error {
-			seen[key] = true
+		if err := visitRecordValues(records[i], func(key record.Path, value string) error {
+			path, err := key.PathExpression()
+			if err != nil {
+				return err
+			}
+
+			seen[path] = true
 			return nil
 		}); err != nil {
 			return nil, err
@@ -61,9 +64,14 @@ func collectNestedValues(records []interfaces.Record) (map[string][]string, erro
 	for i := range records {
 		seenlocal := map[string]bool{}
 
-		if err := visitRecordValues(records[i], func(key, value string) error {
-			seenlocal[key] = true
-			valuemap[key] = append(valuemap[key], value)
+		if err := visitRecordValues(records[i], func(key record.Path, value string) error {
+			path, err := key.PathExpression()
+			if err != nil {
+				return err
+			}
+
+			seenlocal[path] = true
+			valuemap[path] = append(valuemap[path], value)
 			return nil
 		}); err != nil {
 			return nil, err
