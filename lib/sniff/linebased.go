@@ -115,10 +115,10 @@ func sniffLines(lines []string) (*Descriptor, error) {
 	joined := strings.Join(lines, "")
 
 	detectors := []func(io.Reader) (*Descriptor, error){
+		jsonlParser,
 		makeCSVishParser(FormatCSV, ','),
 		makeCSVishParser(FormatTSV, '\t'),
 		makeCSVishParser(FormatSSV, ' '),
-		jsonlParser,
 	}
 
 	for _, detector := range detectors {
