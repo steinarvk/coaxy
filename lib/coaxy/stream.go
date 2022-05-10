@@ -14,8 +14,8 @@ import (
 	"github.com/steinarvk/coaxy/lib/sniff"
 )
 
-const (
-	peekSize = 4096
+var (
+	peekSize = 100 * 1024
 )
 
 func (s *Stream) Descriptor() *sniff.Descriptor {
