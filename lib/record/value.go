@@ -2,6 +2,7 @@ package record
 
 import (
 	"encoding/json"
+	"regexp"
 	"sort"
 	"sync"
 
@@ -52,9 +53,18 @@ func (v *stringValueRecord) tryParse() error {
 			}
 			return nil
 		}))
+
 		if err == nil && len(m) > 0 {
-			v.objectParse = m
-			v.parsed = true
+			var hasNormalKey bool
+			for k := range m {
+				if isNormalLogfmtKey(k) {
+					hasNormalKey = true
+				}
+			}
+			if hasNormalKey {
+				v.objectParse = m
+				v.parsed = true
+			}
 		}
 	}
 
@@ -125,4 +135,12 @@ func (v *stringValueRecord) FieldNames() []string {
 	sort.Strings(rv)
 
 	return rv
+}
+
+var (
+	normalLogfmtKeyRE = regexp.MustCompile(`^[a-zA-Z_]+$`)
+)
+
+func isNormalLogfmtKey(s string) bool {
+	return normalLogfmtKeyRE.MatchString(s)
 }
