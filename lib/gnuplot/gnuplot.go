@@ -88,6 +88,10 @@ func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
 			fmt.Fprintf(w, "set %sdata time\n", letter)
 			fmt.Fprintf(w, "set timefmt %q\n", "%Y-%m-%d")
 		}
+		if columnTypes[i].Kind == sniff.KindTimestamp {
+			fmt.Fprintf(w, "set %sdata time\n", letter)
+			fmt.Fprintf(w, "set timefmt %q\n", "%Y-%m-%dT%H:%M:%S")
+		}
 	}
 
 	fmt.Fprintf(w, "$data << END_OF_DATA\n")
