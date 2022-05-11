@@ -13,6 +13,7 @@ import (
 
 func init() {
 	var flagOutputFilename string
+	var flagShowScript bool
 
 	scatterCmd := &cobra.Command{
 		Use:   "scatter [FIELD-X] [FIELD-Y]",
@@ -72,6 +73,10 @@ func init() {
 				OutputFilename: flagOutputFilename,
 			}
 
+			if flagShowScript {
+				return gnuplot.Scatterplot(spec, options, os.Stdout)
+			}
+
 			runner := gnuplot.Subprocess()
 
 			var scriptErr error
@@ -97,6 +102,7 @@ func init() {
 	}
 
 	scatterCmd.Flags().StringVar(&flagOutputFilename, "output", "", "output file to generate")
+	scatterCmd.Flags().BoolVar(&flagShowScript, "show-script", false, "show raw script")
 
 	rootCmd.AddCommand(scatterCmd)
 }
