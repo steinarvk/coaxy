@@ -1,74 +1,32 @@
 package cmd
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steinarvk/coaxy/lib/coaxy"
-	"github.com/steinarvk/coaxy/lib/interfaces"
 )
 
 func init() {
 	extractCmd := &cobra.Command{
 		Use:   "extract [FIELDS...]",
 		Short: "extract columns from file",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			stream, err := coaxy.OpenStream(os.Stdin)
-			if err != nil {
-				return err
-			}
+	}
 
-			if len(args) == 0 {
-				n := stream.Descriptor().NumColumns
-				if n > 1 {
-					for i := 1; i <= n; i++ {
-						args = append(args, fmt.Sprintf("%d", i))
-					}
-				}
-			}
-
-			if len(args) == 0 {
-				return errors.New("no fields specified")
-			}
-
-			var columns []interfaces.Accessor
-
-			for _, arg := range args {
-				field, err := stream.ResolveField(arg)
-				if err != nil {
-					return err
-				}
-
-				columns = append(columns, field)
-			}
-
-			reader, err := stream.Select(columns)
-			if err != nil {
-				return err
-			}
-
-			values := make([]string, len(columns))
-			for {
-				err := reader.Read(values)
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					return err
-				}
-
-				// TODO: should normalize to TSV _with_ headers if they exist
-				// TODO: should properly handle quoting multiline strings etc
-				fmt.Println(strings.Join(values, "\t"))
+	dataproc := &dataProcessorCommand{
+		processData: func(ctx context.Context, data *dataProcessorData) error {
+			// TODO: should normalize to TSV _with_ headers if they exist
+			// TODO: should properly handle quoting multiline strings etc
+			for tuple := range data.values {
+				fmt.Println(strings.Join(tuple, "\t"))
 			}
 
 			return nil
 		},
 	}
+	dataproc.registerCommonFlags(extractCmd)
+	extractCmd.RunE = dataproc.RunE
 
 	rootCmd.AddCommand(extractCmd)
 }

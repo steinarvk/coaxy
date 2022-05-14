@@ -1,13 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steinarvk/coaxy/lib/coaxy"
 	"github.com/steinarvk/coaxy/lib/gnuplot"
-	"github.com/steinarvk/coaxy/lib/interfaces"
 	"github.com/steinarvk/coaxy/lib/plotspec"
 )
 
@@ -19,41 +18,15 @@ func init() {
 		Use:   "scatter [FIELD-X] [FIELD-Y]",
 		Short: "Generate a scatterplot",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			stream, err := coaxy.OpenStream(os.Stdin)
-			if err != nil {
-				return err
+			return nil
+		},
+	}
+
+	dataproc := &dataProcessorCommand{
+		processData: func(ctx context.Context, data *dataProcessorData) error {
+			if len(data.columnNames) != 2 {
+				return fmt.Errorf("expected 2 columns; got %v", len(data.columnNames))
 			}
-
-			if len(args) != 2 {
-				return fmt.Errorf("must specify exactly two fields; got %v", args)
-			}
-
-			var columns []interfaces.Accessor
-
-			for _, arg := range args {
-				field, err := stream.ResolveField(arg)
-				if err != nil {
-					return err
-				}
-
-				columns = append(columns, field)
-			}
-
-			reader, err := stream.Select(columns)
-			if err != nil {
-				return err
-			}
-
-			dataChan := make(chan []string, 100)
-
-			var readErr error
-			go func() {
-				readErr = reader.ForEach(func(tuple []string) error {
-					dataChan <- tuple
-					return nil
-				})
-				close(dataChan)
-			}()
 
 			if flagOutputFilename == "" {
 				flagOutputFilename = "scatterplot.generated.png"
@@ -66,7 +39,7 @@ func init() {
 			}
 
 			spec := plotspec.Scatterplot{
-				Data: dataChan,
+				Data: data.values,
 			}
 			options := gnuplot.Options{
 				TerminalType:   terminalType,
@@ -89,10 +62,6 @@ func init() {
 				return err
 			}
 
-			if readErr != nil {
-				return readErr
-			}
-
 			if scriptErr != nil {
 				return scriptErr
 			}
@@ -100,6 +69,8 @@ func init() {
 			return nil
 		},
 	}
+	dataproc.registerCommonFlags(scatterCmd)
+	scatterCmd.RunE = dataproc.RunE
 
 	scatterCmd.Flags().StringVar(&flagOutputFilename, "output", "", "output file to generate")
 	scatterCmd.Flags().BoolVar(&flagShowScript, "show-script", false, "show raw script")
