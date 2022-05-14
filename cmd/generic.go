@@ -24,15 +24,33 @@ type dataProcessorData struct {
 
 type dataProcessorCommand struct {
 	processData func(context.Context, *dataProcessorData) error
+
+	flagInputFilename string
 }
 
 func (d *dataProcessorCommand) registerCommonFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&d.flagInputFilename, "input", "", "input filename (if not stdin)")
 }
 
 func (d *dataProcessorCommand) RunE(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	stream, err := coaxy.OpenStream(os.Stdin)
+	var inputReader io.Reader
+
+	if d.flagInputFilename != "" {
+		f, err := os.Open(d.flagInputFilename)
+		if err != nil {
+			return fmt.Errorf("error opening %q: %w", d.flagInputFilename, err)
+		}
+
+		inputReader = f
+
+		defer f.Close()
+	} else {
+		inputReader = os.Stdin
+	}
+
+	stream, err := coaxy.OpenStream(inputReader)
 	if err != nil {
 		return err
 	}
