@@ -20,7 +20,6 @@ func TestDetectTypeOfFiles(t *testing.T) {
 	wantTestTypes := []string{
 		"csv",
 		"tsv",
-		"ssv",
 		"json",
 		"jsonl",
 	}
@@ -36,9 +35,6 @@ func TestDetectTypeOfFiles(t *testing.T) {
 
 		case strings.HasSuffix(info.Name(), ".tsv"):
 			expectedType = "tsv"
-
-		case strings.HasSuffix(info.Name(), ".ssv"):
-			expectedType = "ssv"
 
 		case strings.HasSuffix(info.Name(), ".jsonl"):
 			expectedType = "jsonl"
