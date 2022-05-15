@@ -37,6 +37,16 @@ func (d *dataProcessorCommand) RunE(cmd *cobra.Command, args []string) error {
 
 	var inputReader io.Reader
 
+	if d.flagInputFilename == "" && len(args) > 0 {
+		if fileExists(args[len(args)-1]) {
+			d.flagInputFilename = args[len(args)-1]
+			args = args[:len(args)-1]
+		} else if fileExists(args[0]) {
+			d.flagInputFilename = args[0]
+			args = args[1:]
+		}
+	}
+
 	if d.flagInputFilename != "" {
 		f, err := os.Open(d.flagInputFilename)
 		if err != nil {
