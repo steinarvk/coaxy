@@ -1,6 +1,8 @@
 package accessor
 
-import "github.com/steinarvk/coaxy/lib/interfaces"
+import (
+	"github.com/steinarvk/coaxy/lib/interfaces"
+)
 
 type AtIndex int
 

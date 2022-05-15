@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/steinarvk/coaxy/lib/plotspec"
 	"github.com/steinarvk/coaxy/lib/sniff"
+	"github.com/steinarvk/coaxy/lib/timestamps"
 )
 
 type Options struct {
@@ -85,12 +85,18 @@ func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
 
 	letters := []string{"x", "y"}
 
+	transformers := []func(string) (string, error){
+		nil,
+		nil,
+	}
+
 	for i, letter := range letters {
 		if columnTypes[i].Kind == sniff.KindDate {
 			fmt.Fprintf(w, "set %sdata time\n", letter)
 			fmt.Fprintf(w, "set timefmt %q\n", "%Y-%m-%d")
 		}
 		if columnTypes[i].Kind == sniff.KindTimestamp {
+			transformers[i] = timestamps.NewNormalizerISO()
 			fmt.Fprintf(w, "set %sdata time\n", letter)
 			fmt.Fprintf(w, "set timefmt %q\n", "%Y-%m-%dT%H:%M:%S")
 		}
@@ -99,7 +105,21 @@ func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
 	fmt.Fprintf(w, "$data << END_OF_DATA\n")
 
 	for tuple := range unlimitedChan {
-		fmt.Fprintf(w, strings.Join(tuple, " ")+"\n")
+		for i, v := range tuple {
+			if transformers[i] != nil {
+				nv, err := transformers[i](v)
+				if err != nil {
+					return err
+				}
+				v = nv
+			}
+
+			if (i + 1) == len(tuple) {
+				fmt.Fprintf(w, "%s\n", v)
+			} else {
+				fmt.Fprintf(w, "%s ", v)
+			}
+		}
 	}
 
 	fmt.Fprintf(w, "END_OF_DATA\n")

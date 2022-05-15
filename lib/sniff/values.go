@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/steinarvk/coaxy/lib/timestamps"
 )
 
 var (
@@ -87,6 +89,18 @@ var (
 	}
 )
 
+func allTimestampable(values []string) bool {
+	norm := timestamps.NewNormalizerUnix()
+	for _, v := range values {
+		_, err := norm(v)
+		if err != nil {
+			return false
+		}
+	}
+
+	return true
+}
+
 func DetectValueType(values []string) ValueType {
 	if len(values) <= 0 {
 		return arbitraryStringValue
@@ -104,6 +118,9 @@ func DetectValueType(values []string) ValueType {
 	}
 
 	switch {
+	case allTimestampable(values):
+		retval.Kind = KindTimestamp
+
 	case allSatisfy(values, parseAsInt):
 		retval.Kind = KindInt
 
