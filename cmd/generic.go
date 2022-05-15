@@ -68,7 +68,7 @@ func (d *dataProcessorCommand) RunE(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		n := stream.Descriptor().NumColumns
 		if n > 1 {
-			for i := 1; i <= n; i++ {
+			for i := 0; i < n; i++ {
 				args = append(args, fmt.Sprintf("%d", i))
 			}
 		}

@@ -13,6 +13,8 @@ import (
 type Options struct {
 	TerminalType   string
 	OutputFilename string
+	Width          int
+	Height         int
 }
 
 func limitedTupleTee(inputCh <-chan []string, limit int, fullOut, limitedOut chan<- []string) {
@@ -102,7 +104,18 @@ func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
 
 	fmt.Fprintf(w, "END_OF_DATA\n")
 
-	fmt.Fprintf(w, "set terminal %s\n", opts.TerminalType)
+	if opts.Width != 0 || opts.Height != 0 {
+		width := opts.Width
+		height := opts.Height
+
+		if width == 0 {
+			width = height
+		}
+
+		fmt.Fprintf(w, "set terminal %s size %d, %d\n", opts.TerminalType, width, height)
+	} else {
+		fmt.Fprintf(w, "set terminal %s\n", opts.TerminalType)
+	}
 	fmt.Fprintf(w, "set output %q\n", opts.OutputFilename)
 
 	fmt.Fprintf(w, "plot $data using 1:2 with points")

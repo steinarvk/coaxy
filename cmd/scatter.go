@@ -13,6 +13,8 @@ import (
 func init() {
 	var flagOutputFilename string
 	var flagShowScript bool
+	var flagWidth int
+	var flagHeight int
 
 	scatterCmd := &cobra.Command{
 		Use:   "scatter [FIELD-X] [FIELD-Y]",
@@ -44,6 +46,8 @@ func init() {
 			options := gnuplot.Options{
 				TerminalType:   terminalType,
 				OutputFilename: flagOutputFilename,
+				Width:          flagWidth,
+				Height:         flagHeight,
 			}
 
 			if flagShowScript {
@@ -74,6 +78,8 @@ func init() {
 
 	scatterCmd.Flags().StringVar(&flagOutputFilename, "output", "", "output file to generate")
 	scatterCmd.Flags().BoolVar(&flagShowScript, "show-script", false, "show raw script")
+	scatterCmd.Flags().IntVar(&flagWidth, "width", 0, "width (pixels) of output graphic")
+	scatterCmd.Flags().IntVar(&flagHeight, "height", 0, "height (pixels) of output graphic")
 
 	rootCmd.AddCommand(scatterCmd)
 }

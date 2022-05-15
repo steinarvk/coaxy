@@ -96,15 +96,11 @@ func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 			return nil, fmt.Errorf("numeric column reference for non-tuple-based format %q", desc.Format)
 		}
 
-		if n == 0 {
-			return nil, errors.New("column references are 1-based")
-		}
-
-		if n > desc.NumColumns {
+		if n >= desc.NumColumns {
 			return nil, fmt.Errorf("out of bounds for %q with %d columns", desc.Format, desc.NumColumns)
 		}
 
-		return accessor.AtIndex(n - 1), nil
+		return accessor.AtIndex(n), nil
 	}
 
 	if desc.TupleBased && len(desc.ColumnNames) == 0 {
