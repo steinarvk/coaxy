@@ -15,6 +15,7 @@ const (
 	FormatCSV    = FormatType("csv")
 	FormatTSV    = FormatType("tsv")
 	FormatSSV    = FormatType("ssv")
+	FormatShell  = FormatType("shell")
 	FormatLogfmt = FormatType("logfmt")
 	FormatJSONL  = FormatType("jsonl")
 )

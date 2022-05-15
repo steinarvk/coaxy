@@ -122,6 +122,7 @@ func sniffLines(lines []string) (*Descriptor, error) {
 		jsonlParser,
 		makeCSVishParser(FormatCSV, ','),
 		makeCSVishParser(FormatTSV, '\t'),
+		shlexParser,
 		makeCSVishParser(FormatSSV, ' '),
 	}
 

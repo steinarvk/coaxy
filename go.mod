@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/bcicen/jstream v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6 // indirect
