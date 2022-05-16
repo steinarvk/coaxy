@@ -1,24 +1,18 @@
 package coaxyexpr
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/steinarvk/coaxy/lib/accessor"
+	"github.com/steinarvk/coaxy/lib/filters"
 	"github.com/steinarvk/coaxy/lib/interfaces"
 	"github.com/steinarvk/coaxy/lib/record"
 )
 
-type filter struct {
-	name string
-}
-
-func (f filter) FormatFilter() string {
-	return ":" + f.name
-}
-
 type expression struct {
 	priorChunks []*expression
-	filters     []*filter
+	filters     []*filters.Filter
 	path        record.Path
 }
 
@@ -43,10 +37,13 @@ func (x *expression) addKey(k string) {
 	x.path = x.path.Append(record.Field(k))
 }
 
-func (x *expression) addFilter(filt string) {
-	x.filters = append(x.filters, &filter{
-		name: filt,
-	})
+func (x *expression) addFilter(name string) {
+	filt, err := filters.Lookup(name).NoArgs()
+	if err != nil {
+		panic(fmt.Errorf("error parsing filter %q: %v", name, err))
+	}
+
+	x.filters = append(x.filters, filt)
 }
 
 func (x *expression) FormatExpression() string {
@@ -66,7 +63,7 @@ func (x *expression) FormatExpression() string {
 	}
 
 	for _, filt := range x.filters {
-		chunks = append(chunks, filt.FormatFilter())
+		chunks = append(chunks, filt.String())
 	}
 
 	return strings.Join(chunks, " | ")
@@ -75,8 +72,16 @@ func (x *expression) FormatExpression() string {
 func (x *expression) MakeAccessor() interfaces.Accessor {
 	var accessors []interfaces.Accessor
 
+	for _, priorChunk := range x.priorChunks {
+		accessors = append(accessors, priorChunk.MakeAccessor())
+	}
+
 	for _, comp := range x.path {
 		accessors = append(accessors, comp.MakeAccessor())
+	}
+
+	for _, filt := range x.filters {
+		accessors = append(accessors, filt)
 	}
 
 	return accessor.Func(func(rec interfaces.Record) (interfaces.Record, error) {
