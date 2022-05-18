@@ -11,6 +11,27 @@ type Process struct {
 	Stdin io.WriteCloser
 }
 
+func RunSubprocess(makeInput func(io.Writer) error) error {
+	p := Subprocess()
+	if p.err != nil {
+		return p.err
+	}
+
+	var scriptErr error
+	go func() {
+		scriptErr = makeInput(p.Stdin)
+		p.Stdin.Close()
+	}()
+
+	err := p.Run()
+
+	if scriptErr != nil {
+		return scriptErr
+	}
+
+	return err
+}
+
 func Subprocess() *Process {
 	cmd := exec.Command("gnuplot")
 

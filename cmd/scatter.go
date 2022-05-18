@@ -3,25 +3,63 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/steinarvk/coaxy/lib/gnuplot"
+	"github.com/steinarvk/coaxy/lib/matplotlib"
 	"github.com/steinarvk/coaxy/lib/plotspec"
 )
 
 func init() {
 	var flagOutputFilename string
 	var flagShowScript bool
+	var flagLogBins bool
 	var flagWidth int
 	var flagHeight int
+	var flagEngine string
 
 	scatterCmd := &cobra.Command{
 		Use:   "scatter [FIELD-X] [FIELD-Y]",
 		Short: "Generate a scatterplot",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
-		},
+	}
+
+	genericPlotter := func(prep func(io.Writer) error, runner func(func(io.Writer) error) error) error {
+		if flagShowScript {
+			return prep(os.Stdout)
+		}
+
+		return runner(prep)
+	}
+
+	plotWithGnuplot := func(spec plotspec.Scatterplot) error {
+		options := gnuplot.Options{
+			OutputFilename: flagOutputFilename,
+			Width:          flagWidth,
+			Height:         flagHeight,
+		}
+
+		return genericPlotter(
+			func(w io.Writer) error {
+				return gnuplot.Scatterplot(spec, options, w)
+			},
+			gnuplot.RunSubprocess,
+		)
+	}
+
+	plotWithMatplotlib := func(spec plotspec.Scatterplot) error {
+		options := matplotlib.Options{
+			OutputFilename: flagOutputFilename,
+			LogBins:        flagLogBins,
+		}
+
+		return genericPlotter(
+			func(w io.Writer) error {
+				return matplotlib.Scatterplot(spec, options, w)
+			},
+			matplotlib.RunSubprocess,
+		)
 	}
 
 	dataproc := &dataProcessorCommand{
@@ -35,49 +73,33 @@ func init() {
 				fmt.Fprintf(os.Stderr, "warning: --output not specified; writing to %q.\n", flagOutputFilename)
 			}
 
-			terminalType, err := gnuplot.TerminalTypeFromFilename(flagOutputFilename)
-			if err != nil {
-				return err
-			}
-
 			spec := plotspec.Scatterplot{
 				Data: data.values,
 			}
-			options := gnuplot.Options{
-				TerminalType:   terminalType,
-				OutputFilename: flagOutputFilename,
-				Width:          flagWidth,
-				Height:         flagHeight,
+
+			var err error
+
+			switch flagEngine {
+			case "gnuplot":
+				err = plotWithGnuplot(spec)
+
+			case "matplotlib":
+				err = plotWithMatplotlib(spec)
+
+			default:
+				return fmt.Errorf("no such plotting engine %q", flagEngine)
 			}
 
-			if flagShowScript {
-				return gnuplot.Scatterplot(spec, options, os.Stdout)
-			}
-
-			runner := gnuplot.Subprocess()
-
-			var scriptErr error
-			go func() {
-				scriptErr = gnuplot.Scatterplot(spec, options, runner.Stdin)
-				runner.Stdin.Close()
-			}()
-
-			if err := runner.Run(); err != nil {
-				return err
-			}
-
-			if scriptErr != nil {
-				return scriptErr
-			}
-
-			return nil
+			return err
 		},
 	}
 	dataproc.registerCommonFlags(scatterCmd)
 	scatterCmd.RunE = dataproc.RunE
 
 	scatterCmd.Flags().StringVar(&flagOutputFilename, "output", "", "output file to generate")
+	scatterCmd.Flags().StringVar(&flagEngine, "engine", "gnuplot", "engine to use for plotting")
 	scatterCmd.Flags().BoolVar(&flagShowScript, "show-script", false, "show raw script")
+	scatterCmd.Flags().BoolVar(&flagLogBins, "log-bins", false, "enable logarithmic binning for binned graphs")
 	scatterCmd.Flags().IntVar(&flagWidth, "width", 0, "width (pixels) of output graphic")
 	scatterCmd.Flags().IntVar(&flagHeight, "height", 0, "height (pixels) of output graphic")
 

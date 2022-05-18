@@ -1,7 +1,6 @@
 package coaxy
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -103,13 +102,11 @@ func (s *Stream) resolveField(query string) (interfaces.Accessor, error) {
 		return accessor.AtIndex(n), nil
 	}
 
-	if desc.TupleBased && len(desc.ColumnNames) == 0 {
-		return nil, errors.New("tuple-based format without field names; must use numeric column reference")
-	}
-
-	for index, name := range desc.ColumnNames {
-		if name == query {
-			return accessor.AtIndex(index), nil
+	if desc.TupleBased {
+		for index, name := range desc.ColumnNames {
+			if name == query {
+				return accessor.AtIndex(index), nil
+			}
 		}
 	}
 

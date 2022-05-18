@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/steinarvk/coaxy/lib/plotspec"
+	"github.com/steinarvk/coaxy/lib/plotutil"
 	"github.com/steinarvk/coaxy/lib/sniff"
 	"github.com/steinarvk/coaxy/lib/timestamps"
 )
@@ -17,64 +18,20 @@ type Options struct {
 	Height         int
 }
 
-func limitedTupleTee(inputCh <-chan []string, limit int, fullOut, limitedOut chan<- []string) {
-	for tuple := range inputCh {
-		if limit > 0 {
-			limitedOut <- tuple
-			limit--
-			if limit == 0 {
-				close(limitedOut)
-			}
-		}
-
-		fullOut <- tuple
-	}
-
-	if limit > 0 {
-		close(limitedOut)
-	}
-
-	close(fullOut)
-}
-
-func detectColumnTypes(ch <-chan []string) ([]sniff.ValueType, error) {
-	var values [][]string
-
-	for tuple := range ch {
-		if values == nil {
-			values = make([][]string, len(tuple))
-		}
-
-		for i, value := range tuple {
-			values[i] = append(values[i], value)
-		}
-	}
-
-	rv := make([]sniff.ValueType, len(values))
-
-	for i, columnvalues := range values {
-		rv[i] = sniff.DetectValueType(columnvalues)
-	}
-
-	return rv, nil
-}
-
 func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
-	if opts.TerminalType == "" {
-		return errors.New("no output mode specified")
-	}
-
 	if opts.OutputFilename == "" {
 		return errors.New("no output filename specified")
 	}
 
-	n := 1000
-	limitedChan := make(chan []string, 1000)
-	unlimitedChan := make(chan []string, 1000)
+	if opts.TerminalType == "" {
+		terminalType, err := TerminalTypeFromFilename(opts.OutputFilename)
+		if err != nil {
+			return err
+		}
+		opts.TerminalType = terminalType
+	}
 
-	go limitedTupleTee(plot.Data, n, unlimitedChan, limitedChan)
-
-	columnTypes, err := detectColumnTypes(limitedChan)
+	data, columnTypes, err := plotutil.SniffColumnTypes(plot.Data)
 	if err != nil {
 		return err
 	}
@@ -104,7 +61,7 @@ func Scatterplot(plot plotspec.Scatterplot, opts Options, w io.Writer) error {
 
 	fmt.Fprintf(w, "$data << END_OF_DATA\n")
 
-	for tuple := range unlimitedChan {
+	for tuple := range data {
 		for i, v := range tuple {
 			if transformers[i] != nil {
 				nv, err := transformers[i](v)
