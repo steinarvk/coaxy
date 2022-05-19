@@ -22,9 +22,11 @@ ExprElement
 Path <- Root PathComponent*
 
 Filter <- COLON FilterCore
-FilterCore <- Identifier {
-  p.expression.addFilter(p.identifier)
-}
+
+FilterCore
+  <- ( Identifier LBRACKET Integer RBRACKET { p.expression.addFilterI(p.identifier, p.integer) }
+     / Identifier { p.expression.addSimpleFilter(p.identifier) }
+     )
 
 Root <- RootField / RootIndex / BracketedRootIndex / BracketedRootField
 

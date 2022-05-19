@@ -13,6 +13,7 @@ type FilterEntry struct {
 	name           string
 	noArgsFun      func(string) (string, error)
 	noArgsFunMaker func() func(string) (string, error)
+	makerI         func(int) (func(string) (string, error), error)
 }
 
 func (f *FilterEntry) NoArgs() (*Filter, error) {
@@ -29,6 +30,25 @@ func (f *FilterEntry) NoArgs() (*Filter, error) {
 	}
 
 	return nil, fmt.Errorf("wrong number of arguments")
+}
+
+func (f *FilterEntry) WithArgsInt(n int) (*Filter, error) {
+	if f == nil {
+		return nil, errNoSuchFilter
+	}
+
+	if f.makerI == nil {
+		return nil, fmt.Errorf("wrong number or type of arguments")
+	}
+
+	callback, err := f.makerI(n)
+	if err != nil {
+		return nil, err
+	}
+
+	fullName := fmt.Sprintf("%s[%d]", f.name, n)
+
+	return &Filter{fullName, callback}, nil
 }
 
 func Lookup(name string) *FilterEntry {

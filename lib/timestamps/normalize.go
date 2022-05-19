@@ -264,7 +264,7 @@ func newNormalizerFunc(f func(time.Time) string) func(string) (string, error) {
 
 func NewNormalizerUnix() func(string) (string, error) {
 	return newNormalizerFunc(func(t time.Time) string {
-		unixSecs := float64(t.UnixNano()) / float64(time.Nanosecond)
+		unixSecs := float64(t.UnixNano()) / 1e9
 		return fmt.Sprintf("%f", unixSecs)
 	})
 }

@@ -37,7 +37,16 @@ func (x *expression) addKey(k string) {
 	x.path = x.path.Append(record.Field(k))
 }
 
-func (x *expression) addFilter(name string) {
+func (x *expression) addFilterI(name string, intArg int) {
+	filt, err := filters.Lookup(name).WithArgsInt(intArg)
+	if err != nil {
+		panic(fmt.Errorf("error parsing filter %q: %v", name, err))
+	}
+
+	x.filters = append(x.filters, filt)
+}
+
+func (x *expression) addSimpleFilter(name string) {
 	filt, err := filters.Lookup(name).NoArgs()
 	if err != nil {
 		panic(fmt.Errorf("error parsing filter %q: %v", name, err))
